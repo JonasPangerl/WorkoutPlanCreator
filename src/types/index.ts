@@ -1,4 +1,11 @@
 export type Goal = 'power' | 'strength' | 'hypertrophy' | 'endurance';
+export type FitnessLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export const FITNESS_LEVEL_MULTIPLIER: Record<FitnessLevel, number> = {
+  beginner:     1.6,
+  intermediate: 1.0,
+  advanced:     0.65,
+};
 export type ExerciseType = 'compound' | 'isolation';
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 

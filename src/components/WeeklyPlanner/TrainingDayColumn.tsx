@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TrainingDay, PlannedExercise, Exercise } from '../../types';
-import type { Goal } from '../../types';
+import type { Goal, FitnessLevel } from '../../types';
 import { calcDayDurationSeconds, formatDuration } from '../../utils/calculations';
 import { calcTrainingLoad } from '../../utils/trainingLoad';
 import { PlannedExerciseRow } from './PlannedExerciseRow';
 import { DayLoadBar } from './DayLoadBar';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   day: TrainingDay;
@@ -18,6 +19,7 @@ interface Props {
   onHoverExercise: (exercise: Exercise | null) => void;
   colorMode: boolean;
   compactMode: boolean;
+  fitnessLevel: FitnessLevel;
 }
 
 export const TrainingDayColumn: React.FC<Props> = ({
@@ -30,9 +32,11 @@ export const TrainingDayColumn: React.FC<Props> = ({
   onHoverExercise,
   colorMode,
   compactMode,
+  fitnessLevel,
 }) => {
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(day.label);
+  const { t } = useTranslation();
 
   const { isOver, setNodeRef } = useDroppable({
     id: day.id,
@@ -73,7 +77,9 @@ export const TrainingDayColumn: React.FC<Props> = ({
           </button>
         )}
         <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-gray-600">{day.exercises.length} exercise{day.exercises.length !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-gray-600">
+            {day.exercises.length === 1 ? t.exercisesSingular : t.exercisesPlural.replace('{n}', String(day.exercises.length))}
+          </span>
           {totalSeconds > 0 && (
             <span className="text-xs font-medium" style={{ color: '#f97316' }}>
               ~{formatDuration(totalSeconds)}
@@ -89,7 +95,7 @@ export const TrainingDayColumn: React.FC<Props> = ({
         style={{ minHeight: 120 }}
       >
         {/* Training load indicator */}
-        <DayLoadBar load={load} />
+        <DayLoadBar load={load} fitnessLevel={fitnessLevel} />
         <SortableContext items={exerciseIds} strategy={verticalListSortingStrategy}>
           {day.exercises.map((planned) => {
             const exercise = allExercises.find((e) => e.id === planned.exerciseId);
@@ -122,7 +128,7 @@ export const TrainingDayColumn: React.FC<Props> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
             </svg>
             <p className="text-xs" style={{ color: isOver ? '#f97316' : '#374151' }}>
-              Drop exercises here
+              {t.dropHere}
             </p>
           </div>
         )}

@@ -17,10 +17,14 @@ import { TrainingDayColumn } from './components/WeeklyPlanner/TrainingDayColumn'
 import { InfoPanel } from './components/InfoPanel/InfoPanel';
 import type { Exercise } from './types';
 import type { Goal } from './types';
+import type { FitnessLevel } from './types';
 import { exportPlanJSON, importPlanJSON } from './utils/storage';
 import { exportToPDF } from './utils/pdf';
+import { LanguageProvider, useTranslation } from './contexts/LanguageContext';
+import type { Locale } from './i18n/translations';
 
-function App() {
+function AppInner() {
+  const { t, locale, setLocale } = useTranslation();
   const {
     plan,
     setTrainingsPerWeek,
@@ -39,6 +43,9 @@ function App() {
   const [activeDragExerciseId, setActiveDragExerciseId] = useState<string | null>(null);
   const [colorMode, setColorMode] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
+  const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>(() => {
+    return (localStorage.getItem('fitnessLevel') as FitnessLevel) || 'intermediate';
+  });
   const importRef = useRef<HTMLInputElement>(null);
 
   const allExercises = useMemo(
@@ -120,7 +127,7 @@ function App() {
       const imported = await importPlanJSON(file);
       replacePlan(imported);
     } catch {
-      alert('Failed to import: invalid file.');
+      alert(t.importError);
     }
     e.target.value = '';
   };
@@ -144,12 +151,63 @@ function App() {
               </svg>
             </div>
             <div>
-              <h1 className="text-sm font-bold text-white tracking-tight">Workout Planner</h1>
-              <p className="text-[10px] text-gray-600">Plan · Track · Dominate</p>
+              <h1 className="text-sm font-bold text-white tracking-tight">{t.appTitle}</h1>
+              <p className="text-[10px] text-gray-600">{t.appSubtitle}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Language toggle */}
+            <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#2a2d42' }}>
+              {(['en', 'de'] as Locale[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLocale(l)}
+                  className="px-2.5 py-1 text-xs font-bold uppercase tracking-wide transition-all"
+                  style={{
+                    background: locale === l ? '#f9731622' : 'transparent',
+                    color: locale === l ? '#f97316' : '#6b7280',
+                  }}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* Fitness level selector */}
+            {(() => {
+              const LEVELS: { value: FitnessLevel; label: string; desc: string; color: string }[] = [
+                { value: 'beginner',     label: t.levelBeginner,     desc: t.levelBeginnerDesc,     color: '#22c55e' },
+                { value: 'intermediate', label: t.levelIntermediate, desc: t.levelIntermediateDesc, color: '#f97316' },
+                { value: 'advanced',     label: t.levelAdvanced,     desc: t.levelAdvancedDesc,     color: '#ef4444' },
+              ];
+              return (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">{t.fitnessLevelLabel}</span>
+                  <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#2a2d42' }}>
+                    {LEVELS.map((lvl) => (
+                      <button
+                        key={lvl.value}
+                        onClick={() => {
+                          setFitnessLevel(lvl.value);
+                          localStorage.setItem('fitnessLevel', lvl.value);
+                        }}
+                        title={lvl.desc}
+                        className="px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-all whitespace-nowrap"
+                        style={{
+                          background: fitnessLevel === lvl.value ? `${lvl.color}22` : 'transparent',
+                          color: fitnessLevel === lvl.value ? lvl.color : '#6b7280',
+                          borderRight: '1px solid #2a2d42',
+                        }}
+                      >
+                        {lvl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* View toggles */}
             <button
               onClick={() => setColorMode((v) => !v)}
@@ -159,12 +217,12 @@ function App() {
                 borderColor: colorMode ? '#3b82f644' : '#2a2d42',
                 color: colorMode ? '#60a5fa' : '#6b7280',
               }}
-              title="Colour-code exercise blocks by muscle group"
+              title={t.colorsTooltip}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
-              Colors
+              {t.colorsLabel}
             </button>
             <button
               onClick={() => setCompactMode((v) => !v)}
@@ -174,17 +232,17 @@ function App() {
                 borderColor: compactMode ? '#f9731644' : '#2a2d42',
                 color: compactMode ? '#f97316' : '#6b7280',
               }}
-              title="Compact view — hide sets/reps/rest"
+              title={t.compactTooltip}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h8" />
               </svg>
-              Compact
+              {t.compactLabel}
             </button>
 
             {/* Trainings per week */}
             <div className="flex items-center gap-2 rounded-xl px-3 py-1.5 border" style={{ background: '#13152a', borderColor: '#2a2d42' }}>
-              <span className="text-xs text-gray-500">Days/week</span>
+              <span className="text-xs text-gray-500">{t.daysWeek}</span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setTrainingsPerWeek(plan.trainingsPerWeek - 1)}
@@ -210,7 +268,7 @@ function App() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              Import
+              {t.importBtn}
             </button>
 
             {/* Export JSON */}
@@ -222,7 +280,7 @@ function App() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Export JSON
+              {t.exportJsonBtn}
             </button>
 
             {/* Export PDF */}
@@ -234,7 +292,7 @@ function App() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              PDF
+              {t.pdfBtn}
             </button>          </div>
         </header>
 
@@ -270,6 +328,7 @@ function App() {
                     onHoverExercise={setHoveredExercise}
                     colorMode={colorMode}
                     compactMode={compactMode}
+                    fitnessLevel={fitnessLevel}
                   />
                 </div>
               ))}
@@ -278,7 +337,7 @@ function App() {
 
           {/* Right: Info panel */}
           <div
-            className="flex-shrink-0 w-72 border-l flex flex-col overflow-hidden"
+            className="flex-shrink-0 w-[440px] border-l flex flex-col overflow-hidden"
             style={{ borderColor: '#1e2035', background: '#0f1117' }}
           >
             <InfoPanel
@@ -303,6 +362,14 @@ function App() {
         )}
       </DragOverlay>
     </DndContext>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppInner />
+    </LanguageProvider>
   );
 }
 

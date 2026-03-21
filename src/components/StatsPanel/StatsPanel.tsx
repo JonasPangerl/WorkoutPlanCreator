@@ -1,15 +1,17 @@
 import React from 'react';
 import type { MuscleGroup } from '../../types';
-import { MUSCLE_LABELS, MUSCLE_CATEGORIES } from '../../types';
+import { MUSCLE_CATEGORIES } from '../../types';
 import type { MuscleVolume } from '../../utils/calculations';
 import { CATEGORY_COLORS } from '../../utils/categoryColors';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   volume: Record<string, MuscleVolume>;
   title?: string;
 }
 
-const WEEKLY_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {  chest: { min: 10, max: 20 },
+const WEEKLY_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {
+  chest: { min: 10, max: 20 },
   lats: { min: 10, max: 20 },
   traps: { min: 10, max: 20 },
   rearDelt: { min: 10, max: 20 },
@@ -26,7 +28,9 @@ const WEEKLY_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>>
   adductors: { min: 6, max: 14 },
 };
 
-export const StatsPanel: React.FC<Props> = ({ volume, title = 'Weekly Volume' }) => {
+export const StatsPanel: React.FC<Props> = ({ volume, title }) => {
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t.weeklyVolumeTitle;
   const allMuscles = Object.values(MUSCLE_CATEGORIES).flat() as MuscleGroup[];
 
   const maxSets = Math.max(
@@ -43,12 +47,12 @@ export const StatsPanel: React.FC<Props> = ({ volume, title = 'Weekly Volume' })
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">{resolvedTitle}</h3>
 
       {Object.entries(MUSCLE_CATEGORIES).map(([category, muscles]) => (
         <div key={category}>
           <p className="text-xs mb-2 font-medium" style={{ color: CATEGORY_COLORS[category] ?? '#6b7280' }}>
-            {category}
+            {t.muscleCategories[category] ?? category}
           </p>
           <div className="space-y-2">
             {(muscles as MuscleGroup[]).map((muscle) => {
@@ -64,7 +68,7 @@ export const StatsPanel: React.FC<Props> = ({ volume, title = 'Weekly Volume' })
                 <div key={muscle}>
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-xs ${isUntrained ? 'text-gray-700' : 'text-gray-400'}`}>
-                      {MUSCLE_LABELS[muscle]}
+                      {t.muscles[muscle] ?? muscle}
                     </span>
                     <div className="flex items-center gap-2">
                       {vol.secondarySets > 0 && (
@@ -116,18 +120,18 @@ export const StatsPanel: React.FC<Props> = ({ volume, title = 'Weekly Volume' })
       ))}
 
       <div className="pt-3 border-t space-y-1.5" style={{ borderColor: '#1e2035' }}>
-        <p className="text-xs text-gray-600 font-medium mb-2">Legend</p>
+        <p className="text-xs text-gray-600 font-medium mb-2">{t.legendTitle}</p>
         <div className="flex items-center gap-2 text-xs text-gray-600">
           <div className="w-4 h-2 rounded-full" style={{ background: '#3b82f6' }} />
-          <span>Primary sets</span>
+          <span>{t.primarySets}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-600">
           <div className="w-4 h-2 rounded-full opacity-35" style={{ background: '#3b82f6' }} />
-          <span>Secondary sets (+Xs shown)</span>
+          <span>{t.secondarySets}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-600">
           <div className="w-px h-3 bg-gray-500" />
-          <span>Recommended range markers</span>
+          <span>{t.rangeMarkers}</span>
         </div>
       </div>
     </div>

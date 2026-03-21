@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import type { Exercise, MuscleGroup, ExerciseType, Difficulty } from '../../types';
 import type { Goal } from '../../types';
-import { MUSCLE_LABELS, MUSCLE_CATEGORIES } from '../../types';
+import { MUSCLE_CATEGORIES } from '../../types';
 import { GOAL_PRESETS } from '../../utils/presets';
 import { EXERCISE_CATEGORIES } from '../../data/exercises';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   onSave: (exercise: Omit<Exercise, 'id' | 'isCustom'>) => void;
@@ -28,6 +29,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
   const [canBeUnilateral, setCanBeUnilateral] = useState(false);
   const [customCat, setCustomCat] = useState('');
   const [error, setError] = useState('');
+  const { t } = useTranslation();
 
   const toggleCategory = (cat: string) => {
     setCategories((prev) =>
@@ -59,8 +61,8 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
   };
 
   const handleSave = () => {
-    if (!name.trim()) { setError('Exercise name is required.'); return; }
-    if (primaryMuscles.length === 0) { setError('Select at least one primary muscle.'); return; }
+    if (!name.trim()) { setError(t.validationNameRequired); return; }
+    if (primaryMuscles.length === 0) { setError(t.validationPrimaryRequired); return; }
     const finalCategories = categories.length > 0 ? categories : ['Custom'];
     onSave({ name: name.trim(), categories: finalCategories, description, primaryMuscles, secondaryMuscles, defaultGoal, exerciseType, difficulty, canBeUnilateral });
     onClose();
@@ -81,7 +83,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
-          <h2 className="text-xl font-bold text-white">Create Custom Exercise</h2>
+          <h2 className="text-xl font-bold text-white">{t.createCustomTitle}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -97,12 +99,12 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
           )}
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Exercise Name *</label>
+            <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.exerciseNameLabel}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => { setName(e.target.value); setError(''); }}
-              placeholder="e.g. Paused Bench Press"
+              placeholder={t.exerciseNamePlaceholder}
               className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-orange-500/60 transition-colors"
               style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}
             />
@@ -110,7 +112,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Categories</label>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.categoriesLabel}</label>
               <div className="flex flex-wrap gap-1 mb-1.5">
                 {SELECTABLE_CATEGORIES.map((cat) => (
                   <button
@@ -122,7 +124,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
                       color: categories.includes(cat) ? '#f97316' : '#6b7280',
                       border: `1px solid ${categories.includes(cat) ? '#f9731444' : '#2a2d42'}`,
                     }}
-                  >{cat}</button>
+                  >{t.exerciseCategories[cat] ?? cat}</button>
                 ))}
               </div>
               <div className="flex gap-1">
@@ -131,7 +133,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
                   value={customCat}
                   onChange={(e) => setCustomCat(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomCategory(); } }}
-                  placeholder="Custom category…"
+                  placeholder={t.customCategoryPlaceholder}
                   className="flex-1 rounded-lg px-2 py-1 text-xs text-white placeholder-gray-600 outline-none"
                   style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}
                 />
@@ -143,7 +145,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Default Goal</label>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.defaultGoalLabel}</label>
               <div className="flex gap-1">
                 {GOALS.map((g) => {
                   const p = GOAL_PRESETS[g];
@@ -158,7 +160,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
                         border: `1px solid ${defaultGoal === g ? p.color : '#2a2d42'}`,
                       }}
                     >
-                      {p.label}
+                      {t.goals[g]?.label ?? p.label}
                     </button>
                   );
                 })}
@@ -167,11 +169,11 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Description (optional)</label>
+            <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.descriptionLabel}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of the exercise..."
+              placeholder={t.descriptionPlaceholder}
               rows={2}
               className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none resize-none focus:border-orange-500/60 transition-colors"
               style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}
@@ -180,36 +182,38 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Type</label>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.typeLabel}</label>
               <div className="flex gap-1">
-                {TYPES.map((t) => (
+                {TYPES.map((tp) => (
                   <button
-                    key={t}
-                    onClick={() => setExerciseType(t)}
-                    className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-all capitalize"
+                    key={tp}
+                    onClick={() => setExerciseType(tp)}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-all"
                     style={{
-                      background: exerciseType === t ? (t === 'compound' ? '#3b82f622' : '#a78bfa22') : '#1a1d2e',
-                      color: exerciseType === t ? (t === 'compound' ? '#3b82f6' : '#a78bfa') : '#6b7280',
-                      border: `1px solid ${exerciseType === t ? (t === 'compound' ? '#3b82f644' : '#a78bfa44') : '#2a2d42'}`,
+                      background: exerciseType === tp ? (tp === 'compound' ? '#3b82f622' : '#a78bfa22') : '#1a1d2e',
+                      color: exerciseType === tp ? (tp === 'compound' ? '#3b82f6' : '#a78bfa') : '#6b7280',
+                      border: `1px solid ${exerciseType === tp ? (tp === 'compound' ? '#3b82f644' : '#a78bfa44') : '#2a2d42'}`,
                     }}
-                  >{t}</button>
+                  >{tp === 'compound' ? t.compoundLabel : t.isolationLabel}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">Difficulty</label>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium uppercase tracking-wide">{t.difficultyLabel}</label>
               <div className="flex gap-1">
                 {DIFFICULTIES.map((d) => (
                   <button
                     key={d}
                     onClick={() => setDifficulty(d)}
-                    className="flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-all capitalize"
+                    className="flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-all"
                     style={{
                       background: difficulty === d ? `${DIFF_COLORS[d]}22` : '#1a1d2e',
                       color: difficulty === d ? DIFF_COLORS[d] : '#6b7280',
                       border: `1px solid ${difficulty === d ? `${DIFF_COLORS[d]}44` : '#2a2d42'}`,
                     }}
-                  >{d.slice(0, 5)}</button>
+                  >
+                    {d === 'beginner' ? t.beginnerLabel : d === 'intermediate' ? t.intermediateLabel : t.advancedLabel}
+                  </button>
                 ))}
               </div>
             </div>
@@ -217,8 +221,8 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
 
           <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}>
             <div>
-              <p className="text-xs text-white font-medium">Can be done unilaterally</p>
-              <p className="text-[10px] text-gray-600">Left + right = 1 set, rest after both sides</p>
+              <p className="text-xs text-white font-medium">{t.unilateralTitle}</p>
+              <p className="text-[10px] text-gray-600">{t.unilateralSubLabel}</p>
             </div>
             <button
               onClick={() => setCanBeUnilateral(!canBeUnilateral)}
@@ -234,12 +238,12 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
 
           <div>
             <label className="block text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
-              Muscles — click once for primary, twice for secondary, third to clear *
+              {t.musclesInstruction}
             </label>
             <div className="space-y-3">
               {Object.entries(MUSCLE_CATEGORIES).map(([cat, muscles]) => (
                 <div key={cat}>
-                  <p className="text-xs text-gray-600 mb-1.5">{cat}</p>
+                  <p className="text-xs text-gray-600 mb-1.5">{t.muscleCategories[cat] ?? cat}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {muscles.map((m) => {
                       const status = getMuscleStatus(m);
@@ -264,7 +268,7 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
                             border: `1px solid ${status === 'primary' ? '#f9731644' : status === 'secondary' ? '#37415166' : '#2a2d42'}`,
                           }}
                         >
-                          {MUSCLE_LABELS[m]}
+                          {t.muscles[m] ?? m}
                           {status === 'primary' && ' ●'}
                           {status === 'secondary' && ' ○'}
                         </button>
@@ -281,14 +285,14 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
               onClick={onClose}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-400 border border-gray-700 hover:border-gray-500 transition-colors"
             >
-              Cancel
+              {t.cancelBtn}
             </button>
             <button
               onClick={handleSave}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
               style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white' }}
             >
-              Save Exercise
+              {t.saveExerciseBtn}
             </button>
           </div>
         </div>

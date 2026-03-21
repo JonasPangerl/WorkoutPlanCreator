@@ -8,13 +8,7 @@ import { MuscleTags } from '../shared/MuscleTags';
 import { GoalSelector } from '../shared/GoalSelector';
 import { CATEGORY_COLORS } from '../../utils/categoryColors';
 import { GOAL_PRESETS } from '../../utils/presets';
-
-const GOAL_ABBREV: Record<Goal, string> = {
-  power:       'PWR',
-  strength:    'STR',
-  hypertrophy: 'HYP',
-  endurance:   'END',
-};
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   planned: PlannedExercise;
@@ -40,8 +34,10 @@ export const PlannedExerciseRow: React.FC<Props> = ({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: planned.instanceId,
   });
+  const { t } = useTranslation();
 
   const duration = calcExerciseDurationSeconds(planned);
+  const displayName = t.exerciseNames[exercise.id] ?? exercise.name;
 
   const formatRest = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -87,7 +83,7 @@ export const PlannedExerciseRow: React.FC<Props> = ({
               className="text-xs font-semibold truncate block"
               style={{ color: colorMode ? blockColor : 'white' }}
             >
-              {exercise.name}
+              {displayName}
             </span>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -100,7 +96,7 @@ export const PlannedExerciseRow: React.FC<Props> = ({
                 color: GOAL_PRESETS[planned.goal].color,
               }}
             >
-              {GOAL_ABBREV[planned.goal]}
+              {t.goalAbbrev[planned.goal] ?? planned.goal.slice(0, 3).toUpperCase()}
             </span>
             <button
               onClick={onRemove}
@@ -133,10 +129,10 @@ export const PlannedExerciseRow: React.FC<Props> = ({
                     color: planned.isUnilateral ? '#f97316' : '#4b5563',
                     border: `1px solid ${planned.isUnilateral ? '#f9731644' : '#2a2d42'}`,
                   }}
-                  title="Unilateral: left+right = 1 set, rest after both sides"
+                  title={t.unilateralTooltip}
                 >
                   <span>1×</span>
-                  <span>{planned.isUnilateral ? 'On' : 'Off'}</span>
+                  <span>{planned.isUnilateral ? t.unilateralOn : t.unilateralOff}</span>
                 </button>
               )}
             </div>
@@ -145,7 +141,7 @@ export const PlannedExerciseRow: React.FC<Props> = ({
             <div className="grid grid-cols-3 gap-2">
               {/* Sets */}
               <div className="rounded-lg p-2 text-center" style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}>
-                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Sets</p>
+                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">{t.setsLabel}</p>
                 <div className="flex items-center justify-center gap-1.5">
                   <button
                     onClick={() => onUpdate({ sets: Math.max(1, planned.sets - 1) })}
@@ -161,7 +157,7 @@ export const PlannedExerciseRow: React.FC<Props> = ({
 
               {/* Reps */}
               <div className="rounded-lg p-2" style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}>
-                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide text-center">Reps</p>
+                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide text-center">{t.repsLabel}</p>
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
@@ -185,7 +181,7 @@ export const PlannedExerciseRow: React.FC<Props> = ({
 
               {/* Rest */}
               <div className="rounded-lg p-2" style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}>
-                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide text-center">Rest</p>
+                <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide text-center">{t.restLabel}</p>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => onUpdate({ restSeconds: Math.max(15, planned.restSeconds - 15) })}

@@ -4,33 +4,13 @@ import { EXERCISES, EXERCISE_CATEGORIES } from '../../data/exercises';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 import { CustomExerciseModal } from './CustomExerciseModal';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   customExercises: Exercise[];
   onAddCustom: (exercise: Omit<Exercise, 'id' | 'isCustom'>) => void;
   onDeleteCustom: (id: string) => void;
 }
-
-const GOAL_FILTERS: { value: Goal | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Goals' },
-  { value: 'power', label: 'Power' },
-  { value: 'strength', label: 'Strength' },
-  { value: 'hypertrophy', label: 'Hypertrophy' },
-  { value: 'endurance', label: 'Endurance' },
-];
-
-const TYPE_FILTERS: { value: ExerciseType | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'compound', label: 'Compound' },
-  { value: 'isolation', label: 'Isolation' },
-];
-
-const LEVEL_FILTERS: { value: Difficulty | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Levels' },
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-];
 
 const GOAL_COLORS: Record<string, string> = {
   power: '#7c3aed',
@@ -91,15 +71,42 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
   const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('compact');
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const { t } = useTranslation();
 
   const allExercises = useMemo(() => [...EXERCISES, ...customExercises], [customExercises]);
+
+  // Build translated filter arrays inside render so they re-compute on locale change
+  const goalFilters: { value: Goal | 'all'; label: string }[] = [
+    { value: 'all',         label: t.allGoalsFilter },
+    { value: 'power',       label: t.goals['power']?.label ?? 'Power' },
+    { value: 'strength',    label: t.goals['strength']?.label ?? 'Strength' },
+    { value: 'hypertrophy', label: t.goals['hypertrophy']?.label ?? 'Hypertrophy' },
+    { value: 'endurance',   label: t.goals['endurance']?.label ?? 'Endurance' },
+  ];
+
+  const typeFilters: { value: ExerciseType | 'all'; label: string }[] = [
+    { value: 'all',       label: t.allTypesFilter },
+    { value: 'compound',  label: t.compoundLabel },
+    { value: 'isolation', label: t.isolationLabel },
+  ];
+
+  const levelFilters: { value: Difficulty | 'all'; label: string }[] = [
+    { value: 'all',          label: t.allLevelsFilter },
+    { value: 'beginner',     label: t.beginnerLabel },
+    { value: 'intermediate', label: t.intermediateLabel },
+    { value: 'advanced',     label: t.advancedLabel },
+  ];
 
   const filtered = useMemo(() => {
     return allExercises.filter((ex) => {
       if (selectedCategory !== 'All' && !ex.categories.includes(selectedCategory)) return false;
-      if (search && !ex.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const nameEN = ex.name.toLowerCase();
+        const nameDE = (t.exerciseNames[ex.id] ?? '').toLowerCase();
+        if (!nameEN.includes(q) && !nameDE.includes(q)) return false;
+      }
       if (goalFilter !== 'all') {
-        // Power and Strength share the same exercise pool
         const goalMatch =
           goalFilter === 'power'
             ? ex.defaultGoal === 'power' || ex.defaultGoal === 'strength'
@@ -110,7 +117,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
       if (levelFilter !== 'all' && ex.difficulty !== levelFilter) return false;
       return true;
     });
-  }, [allExercises, selectedCategory, search, goalFilter, typeFilter, levelFilter]);
+  }, [allExercises, selectedCategory, search, goalFilter, typeFilter, levelFilter, t]);
 
   const categories = useMemo(() => {
     const customCats = customExercises.flatMap((e) => e.categories);
@@ -126,7 +133,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
       {/* Header */}
       <div className="flex-shrink-0 p-3 border-b" style={{ borderColor: '#1e2035' }}>
         <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Exercise Library</h2>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t.exerciseLibraryTitle}</h2>
           <div className="flex items-center gap-1.5">
             {/* View toggle */}
             <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#2a2d42' }}>
@@ -134,7 +141,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
                 onClick={() => setViewMode('compact')}
                 className="px-2 py-1.5 transition-colors"
                 style={{ background: viewMode === 'compact' ? '#f9731622' : 'transparent', color: viewMode === 'compact' ? '#f97316' : '#6b7280' }}
-                title="Compact view"
+                title={t.compactViewTooltip}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -144,7 +151,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
                 onClick={() => setViewMode('detailed')}
                 className="px-2 py-1.5 transition-colors"
                 style={{ background: viewMode === 'detailed' ? '#f9731622' : 'transparent', color: viewMode === 'detailed' ? '#f97316' : '#6b7280' }}
-                title="Detailed view"
+                title={t.detailedViewTooltip}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -159,7 +166,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              New
+              {t.newExerciseBtn}
             </button>
           </div>
         </div>
@@ -173,7 +180,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search exercises..."
+            placeholder={t.searchPlaceholder}
             className="w-full rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-600 outline-none transition-colors"
             style={{ background: '#1a1d2e', border: '1px solid #2a2d42' }}
           />
@@ -199,7 +206,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
                 border: `1px solid ${selectedCategory === cat ? '#f9731444' : '#2a2d42'}`,
               }}
             >
-              {cat}
+              {t.exerciseCategories[cat] ?? cat}
             </button>
           ))}
         </div>
@@ -207,28 +214,28 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
         {/* ── Sub-filters ── */}
         <div className="space-y-1.5 pt-1 border-t" style={{ borderColor: '#1e2035' }}>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">Goal</span>
-            <FilterPill options={GOAL_FILTERS} value={goalFilter} onChange={setGoalFilter} colorMap={GOAL_COLORS} />
+            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">{t.goals['strength']?.label.slice(0, 4) ?? 'Goal'}</span>
+            <FilterPill options={goalFilters} value={goalFilter} onChange={setGoalFilter} colorMap={GOAL_COLORS} />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">Type</span>
+            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">{t.typeLabel}</span>
             <FilterPill
-              options={TYPE_FILTERS}
+              options={typeFilters}
               value={typeFilter}
               onChange={setTypeFilter}
               colorMap={{ compound: '#3b82f6', isolation: '#a78bfa', all: '#6b7280' }}
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">Level</span>
-            <FilterPill options={LEVEL_FILTERS} value={levelFilter} onChange={setLevelFilter} colorMap={LEVEL_COLORS} />
+            <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">{t.difficultyLabel.slice(0, 4)}</span>
+            <FilterPill options={levelFilters} value={levelFilter} onChange={setLevelFilter} colorMap={LEVEL_COLORS} />
           </div>
           {hasActiveFilters && (
             <button
               onClick={() => { setSearch(''); setSelectedCategory('All'); setGoalFilter('all'); setTypeFilter('all'); setLevelFilter('all'); }}
               className="text-[9px] text-gray-600 hover:text-orange-400 transition-colors mt-0.5"
             >
-              Clear all filters
+              {t.clearFilters}
             </button>
           )}
         </div>
@@ -238,9 +245,9 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
         {filtered.length === 0 ? (
           <div className="text-center py-8 text-gray-600">
-            <p className="text-sm">No exercises found</p>
+            <p className="text-sm">{t.noExercisesFound}</p>
             <button onClick={() => setShowCustomModal(true)} className="mt-2 text-xs text-orange-500 hover:text-orange-400 underline">
-              Create custom exercise
+              {t.createCustomLink}
             </button>
           </div>
         ) : (
@@ -256,7 +263,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
       </div>
 
       <div className="flex-shrink-0 px-3 py-1.5 border-t text-[10px] text-gray-700" style={{ borderColor: '#1e2035' }}>
-        {filtered.length} of {allExercises.length} exercises · Drag to plan
+        {t.exercisesCountFmt.replace('{n}', String(filtered.length)).replace('{m}', String(allExercises.length))}
       </div>
 
       {detailExercise && (

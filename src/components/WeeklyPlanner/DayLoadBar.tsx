@@ -1,9 +1,13 @@
 import React from 'react';
 import type { TrainingLoad } from '../../utils/trainingLoad';
-import { loadColor, loadLabel } from '../../utils/trainingLoad';
+import { loadColor } from '../../utils/trainingLoad';
+import type { FitnessLevel } from '../../types';
+import { FITNESS_LEVEL_MULTIPLIER } from '../../types';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   load: TrainingLoad;
+  fitnessLevel: FitnessLevel;
 }
 
 interface DimProps {
@@ -30,14 +34,30 @@ const Dim: React.FC<DimProps> = ({ label, value, color, tooltip }) => (
   </div>
 );
 
-export const DayLoadBar: React.FC<Props> = ({ load }) => {
+export const DayLoadBar: React.FC<Props> = ({ load, fitnessLevel }) => {
+  const { t } = useTranslation();
+
   if (load.overall === 0) return null;
 
-  const overall = load.overall;
+  const multiplier = FITNESS_LEVEL_MULTIPLIER[fitnessLevel];
+
+  // Apply multiplier and cap at 100
+  const scale = (v: number) => Math.min(100, Math.round(v * multiplier));
+
+  const overall = scale(load.overall);
+  const cns     = scale(load.cns);
+  const muscle  = scale(load.muscle);
+  const mental  = scale(load.mental);
+
   const color = loadColor(overall);
-  const label = loadLabel(overall);
   const isHigh = overall >= 80;
   const isWarning = overall >= 60;
+
+  const loadLabelText =
+    overall < 30 ? t.loadLow :
+    overall < 60 ? t.loadModerate :
+    overall < 80 ? t.loadHigh :
+    t.loadVeryHigh;
 
   return (
     <div
@@ -47,13 +67,13 @@ export const DayLoadBar: React.FC<Props> = ({ load }) => {
       {/* Header row */}
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Training Load</span>
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.trainingLoad}</span>
           {isHigh && (
             <span
               className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 rounded-full animate-pulse"
               style={{ background: '#ef444422', color: '#ef4444' }}
             >
-              ⚠ HIGH
+              {t.loadHighWarn}
             </span>
           )}
         </div>
@@ -65,31 +85,16 @@ export const DayLoadBar: React.FC<Props> = ({ load }) => {
             />
           </div>
           <span className="text-[10px] font-bold" style={{ color }}>
-            {label}
+            {loadLabelText}
           </span>
         </div>
       </div>
 
       {/* Three dimension bars */}
       <div className="space-y-1">
-        <Dim
-          label="CNS"
-          value={load.cns}
-          color={loadColor(load.cns)}
-          tooltip="Central Nervous System load — heavy compound lifts and low-rep power work drain the CNS most. High CNS fatigue needs more recovery days."
-        />
-        <Dim
-          label="Muscle"
-          value={load.muscle}
-          color={loadColor(load.muscle)}
-          tooltip="Muscle damage / volume fatigue — driven by total reps × sets × muscle size. High values mean more soreness and longer tissue repair."
-        />
-        <Dim
-          label="Mental"
-          value={load.mental}
-          color={loadColor(load.mental)}
-          tooltip="Mental / cognitive load — long sessions and many compound movements require sustained focus and raise overall fatigue."
-        />
+        <Dim label={t.cnsLabel}    value={cns}    color={loadColor(cns)}    tooltip={t.cnsTooltip} />
+        <Dim label={t.muscleLabel} value={muscle} color={loadColor(muscle)} tooltip={t.muscleTooltip} />
+        <Dim label={t.mentalLabel} value={mental} color={loadColor(mental)} tooltip={t.mentalTooltip} />
       </div>
     </div>
   );

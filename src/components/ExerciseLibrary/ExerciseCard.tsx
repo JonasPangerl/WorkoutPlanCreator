@@ -4,6 +4,7 @@ import type { Exercise } from '../../types';
 import { MuscleDiagram } from '../MuscleDiagram/MuscleDiagram';
 import { MuscleTags } from '../shared/MuscleTags';
 import { GOAL_PRESETS } from '../../utils/presets';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   exercise: Exercise;
@@ -19,6 +20,7 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
     id: exercise.id,
     data: { type: 'exercise', exerciseId: exercise.id, defaultGoal: exercise.defaultGoal },
   });
+  const { t } = useTranslation();
 
   const dragStyle: React.CSSProperties = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.9 }
@@ -27,6 +29,11 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
   const preset = GOAL_PRESETS[exercise.defaultGoal];
   const diffColor = DIFFICULTY_COLORS[exercise.difficulty] ?? '#6b7280';
   const typeColor = TYPE_COLORS[exercise.exerciseType] ?? '#6b7280';
+  const displayName = t.exerciseNames[exercise.id] ?? exercise.name;
+
+  const diffAbbrev = exercise.difficulty === 'beginner' ? t.beginnerAbbrev
+    : exercise.difficulty === 'intermediate' ? t.intermediateAbbrev
+    : t.advancedAbbrev;
 
   if (viewMode === 'compact') {
     return (
@@ -44,17 +51,17 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="flex items-center gap-1.5 min-w-0">
             <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: preset.color }} />
-            <span className="text-xs font-medium text-white leading-snug">{exercise.name}</span>
+            <span className="text-xs font-medium text-white leading-snug">{displayName}</span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {exercise.canBeUnilateral && (
               <span className="text-[9px] px-1 rounded" style={{ background: '#f9731618', color: '#f9731680' }}>1x</span>
             )}
             <span className="text-[9px] px-1.5 rounded-full font-medium" style={{ background: `${typeColor}18`, color: typeColor }}>
-              {exercise.exerciseType === 'compound' ? 'Comp' : 'Iso'}
+              {exercise.exerciseType === 'compound' ? t.compoundAbbrev : t.isolationAbbrev}
             </span>
             <span className="text-[9px] px-1.5 rounded-full font-medium" style={{ background: `${diffColor}18`, color: diffColor }}>
-              {exercise.difficulty.slice(0, 3)}
+              {diffAbbrev}
             </span>
             <button
               onMouseDown={(e) => e.stopPropagation()}
@@ -96,7 +103,7 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-2 mb-1.5">
-              <span className="text-sm font-semibold text-white leading-tight flex-1">{exercise.name}</span>
+              <span className="text-sm font-semibold text-white leading-tight flex-1">{displayName}</span>
               <button
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); onOpenDetail(exercise); }}
@@ -109,14 +116,14 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
             </div>
             <div className="flex gap-1 mb-2 flex-wrap">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>
-                {exercise.exerciseType}
+                {exercise.exerciseType === 'compound' ? t.compoundLabel : t.isolationLabel}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${diffColor}18`, color: diffColor, border: `1px solid ${diffColor}30` }}>
-                {exercise.difficulty}
+                {exercise.difficulty === 'beginner' ? t.beginnerLabel : exercise.difficulty === 'intermediate' ? t.intermediateLabel : t.advancedLabel}
               </span>
               {exercise.canBeUnilateral && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: '#f9731618', color: '#f97316', border: '1px solid #f9731630' }}>
-                  unilateral
+                  {t.unilateralTitle.split(' ')[0].toLowerCase()}
                 </span>
               )}
             </div>
@@ -130,4 +137,3 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
     </div>
   );
 };
-

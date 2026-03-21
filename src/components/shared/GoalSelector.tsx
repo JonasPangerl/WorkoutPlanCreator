@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Goal } from '../../types';
 import { GOAL_PRESETS } from '../../utils/presets';
+import { useTranslation } from '../../contexts/LanguageContext';
 
 interface Props {
   goal: Goal;
@@ -11,6 +12,7 @@ interface Props {
 const GOALS: Goal[] = ['power', 'strength', 'hypertrophy', 'endurance'];
 
 export const GoalSelector: React.FC<Props> = ({ goal, onChange, size = 'md' }) => {
+  const { t } = useTranslation();
   const preset = GOAL_PRESETS[goal];
 
   if (!onChange) {
@@ -21,7 +23,7 @@ export const GoalSelector: React.FC<Props> = ({ goal, onChange, size = 'md' }) =
         }`}
         style={{ background: `${preset.color}22`, color: preset.color, border: `1px solid ${preset.color}44` }}
       >
-        {preset.label}
+        {t.goals[goal]?.label ?? preset.label}
       </span>
     );
   }
@@ -44,7 +46,7 @@ export const GoalSelector: React.FC<Props> = ({ goal, onChange, size = 'md' }) =
               border: `1px solid ${isActive ? p.color : '#374151'}`,
             }}
           >
-            {p.label}
+            {t.goals[g]?.label ?? p.label}
           </button>
         );
       })}
