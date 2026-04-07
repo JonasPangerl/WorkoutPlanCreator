@@ -12,7 +12,7 @@ interface Props {
 }
 
 const GOALS: Goal[] = ['power', 'strength', 'hypertrophy', 'endurance'];
-const TYPES: ExerciseType[] = ['compound', 'isolation'];
+const TYPES: ExerciseType[] = ['compound', 'isolation', 'cardio', 'plyometric'];
 const DIFFICULTIES: Difficulty[] = ['beginner', 'intermediate', 'advanced'];
 const DIFF_COLORS: Record<Difficulty, string> = { beginner: '#22c55e', intermediate: '#f97316', advanced: '#ef4444' };
 const SELECTABLE_CATEGORIES = EXERCISE_CATEGORIES.filter((c) => c !== 'All');
@@ -190,11 +190,11 @@ export const CustomExerciseModal: React.FC<Props> = ({ onSave, onClose }) => {
                     onClick={() => setExerciseType(tp)}
                     className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-all"
                     style={{
-                      background: exerciseType === tp ? (tp === 'compound' ? '#3b82f622' : '#a78bfa22') : '#1a1d2e',
-                      color: exerciseType === tp ? (tp === 'compound' ? '#3b82f6' : '#a78bfa') : '#6b7280',
-                      border: `1px solid ${exerciseType === tp ? (tp === 'compound' ? '#3b82f644' : '#a78bfa44') : '#2a2d42'}`,
+                      background: exerciseType === tp ? (tp === 'compound' ? '#3b82f622' : tp === 'isolation' ? '#a78bfa22' : tp === 'cardio' ? '#0ea5e922' : '#f59e0b22') : '#1a1d2e',
+                      color: exerciseType === tp ? (tp === 'compound' ? '#3b82f6' : tp === 'isolation' ? '#a78bfa' : tp === 'cardio' ? '#0ea5e9' : '#f59e0b') : '#6b7280',
+                      border: `1px solid ${exerciseType === tp ? (tp === 'compound' ? '#3b82f644' : tp === 'isolation' ? '#a78bfa44' : tp === 'cardio' ? '#0ea5e944' : '#f59e0b44') : '#2a2d42'}`,
                     }}
-                  >{tp === 'compound' ? t.compoundLabel : t.isolationLabel}</button>
+                  >{tp === 'compound' ? t.compoundLabel : tp === 'isolation' ? t.isolationLabel : tp === 'cardio' ? t.cardioLabel : t.plyometricLabel}</button>
                 ))}
               </div>
             </div>

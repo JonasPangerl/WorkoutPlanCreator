@@ -1,4 +1,4 @@
-import type { WorkoutPlan, Exercise } from '../types';
+import type { WorkoutPlan, Exercise, Weekday } from '../types';
 
 // Bump this key whenever the stored shape changes incompatibly.
 const STORAGE_KEY = 'workout-plan-v2';
@@ -14,6 +14,44 @@ function migrateExercise(ex: Exercise & { category?: string }): Exercise {
   return ex;
 }
 
+function normalizePlan(plan: WorkoutPlan): WorkoutPlan {
+  const defaultRestSeconds = Math.max(15, Math.min(600, plan.defaultRestSeconds ?? 120));
+  const maxHeartRate = Math.max(120, Math.min(230, plan.maxHeartRate ?? 190));
+  const periodization = {
+    cycleWeeks: Math.max(2, Math.min(16, plan.periodization?.cycleWeeks ?? 6)),
+    uprampEnabled: Boolean(plan.periodization?.uprampEnabled ?? false),
+    uprampWeeks: Math.max(1, Math.min(8, plan.periodization?.uprampWeeks ?? 2)),
+    overreachEnabled: Boolean(plan.periodization?.overreachEnabled ?? true),
+    deloadEnabled: Boolean(plan.periodization?.deloadEnabled ?? true),
+  };
+  const defaultWeekdays: Weekday[] = ['mon', 'wed', 'fri', 'sat', 'tue', 'thu', 'sun'];
+  return {
+    ...plan,
+    defaultRestSeconds,
+    maxHeartRate,
+    periodization,
+    days: (plan.days ?? []).map((day) => ({
+      ...day,
+      weekDay: day.weekDay ?? defaultWeekdays[(plan.days ?? []).indexOf(day)] ?? 'mon',
+      exercises: (day.exercises ?? []).map((ex) => ({
+        ...ex,
+        blockType: ex.blockType ?? 'strength',
+        restSeconds: typeof ex.restSeconds === 'number' ? ex.restSeconds : defaultRestSeconds,
+        rir: typeof ex.rir === 'number' ? ex.rir : 2,
+        durationSeconds: typeof ex.durationSeconds === 'number' ? ex.durationSeconds : undefined,
+        cardioPreset: ex.cardioPreset ?? undefined,
+        cardioActivity: ex.cardioActivity ?? 'run',
+        targetHrMinPercent: typeof ex.targetHrMinPercent === 'number' ? ex.targetHrMinPercent : undefined,
+        targetHrMaxPercent: typeof ex.targetHrMaxPercent === 'number' ? ex.targetHrMaxPercent : undefined,
+        intervalMode: ex.intervalMode ?? 'simple',
+        intervalWorkSeconds: typeof ex.intervalWorkSeconds === 'number' ? ex.intervalWorkSeconds : 60,
+        intervalRestSeconds: typeof ex.intervalRestSeconds === 'number' ? ex.intervalRestSeconds : 90,
+        intervalRounds: typeof ex.intervalRounds === 'number' ? ex.intervalRounds : 8,
+      })),
+    })),
+  };
+}
+
 export function loadPlan(): WorkoutPlan | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -23,7 +61,7 @@ export function loadPlan(): WorkoutPlan | null {
     if (plan.customExercises) {
       plan.customExercises = plan.customExercises.map(migrateExercise);
     }
-    return plan as WorkoutPlan;
+    return normalizePlan(plan as WorkoutPlan);
   } catch {
     return null;
   }
@@ -55,7 +93,7 @@ export function importPlanJSON(file: File): Promise<WorkoutPlan> {
         if (plan.customExercises) {
           plan.customExercises = plan.customExercises.map(migrateExercise);
         }
-        resolve(plan as WorkoutPlan);
+        resolve(normalizePlan(plan as WorkoutPlan));
       } catch {
         reject(new Error('Invalid JSON file'));
       }

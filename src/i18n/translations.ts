@@ -11,9 +11,37 @@ export interface Translations {
   daysWeek: string;
   importBtn: string;
   exportJsonBtn: string;
+  exportLlmBtn: string;
   pdfBtn: string;
+  fullPeriodPdfBtn: string;
+  helpBtn: string;
+  firstStepsBtn: string;
   newPlanBtn: string;
   importError: string;
+  copySuccess: string;
+  copyFailed: string;
+  defaultRestLabel: string;
+  step15SecLabel: string;
+  cycleWeeksLabel: string;
+  uprampLabel: string;
+  uprampWeeksLabel: string;
+  overreachLabel: string;
+  deloadLabel: string;
+  maxHrLabel: string;
+  cardioLabel: string;
+  intervalLabel: string;
+  plyometricLabel: string;
+  cardioAbbrev: string;
+  plyometricAbbrev: string;
+  cardioPresetLabel: string;
+  cardioTypeLabel: string;
+  cardioActivityLabel: string;
+  intervalHighIntensityLabel: string;
+  intervalLowIntensityLabel: string;
+  intervalCyclesLabel: string;
+  targetHrBpmLabel: string;
+  durationLabel: string;
+  cardioPresetLabels: Record<string, string>;
 
   // ── Goals ────────────────────────────────────────────────
   goals: Record<string, { label: string; description: string }>;
@@ -37,6 +65,7 @@ export interface Translations {
   setsLabel: string;
   repsLabel: string;
   restLabel: string;
+  rirLabel: string;
   unilateralOn: string;
   unilateralOff: string;
   unilateralTooltip: string;
@@ -78,11 +107,16 @@ export interface Translations {
   createCustomLink: string;
   exercisesCountFmt: string; // uses {n} and {m} placeholders
   clearFilters: string;
+  libraryTabMuscle: string;
+  libraryTabEndurance: string;
+  libraryTabPlyometric: string;
+  libraryTabBreakWarmup: string;
 
   // ── Info panel ───────────────────────────────────────────
   muscleMapTab: string;
   weeklyTab: string;
   dailyTab: string;
+  recoveryTab: string;
   viewingLabel: string;
   weeklyOverview: string;
   noExercisesPlanned: string;
@@ -139,6 +173,16 @@ export interface Translations {
   restDayLabel: string;
   weeklyMapTitle: string;
   fitnessLevelLabel: string;
+  weekdayLong: Record<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun', string>;
+  weekdayShort: Record<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun', string>;
+  recoveryFresh: string;
+  recoveryRecovering: string;
+  recoveryFatigued: string;
+  recoveryStatusCodes: Record<'fresh' | 'recovering' | 'fatigued', string>;
+  recoveryCyclingView: string;
+  recoveryHighlightConflicts: string;
+  recoveryConflictsBadge: string;
+  recoveryNoConflicts: string;
   levelBeginner: string;
   levelIntermediate: string;
   levelAdvanced: string;
@@ -161,9 +205,43 @@ const en: Translations = {
   daysWeek: 'Days/week',
   importBtn: 'Import',
   exportJsonBtn: 'Export JSON',
+  exportLlmBtn: 'Copy for LLM',
   pdfBtn: 'PDF',
+  fullPeriodPdfBtn: 'Full Period PDF',
+  helpBtn: 'Help',
+  firstStepsBtn: 'First Steps',
   newPlanBtn: 'New Plan',
   importError: 'Failed to import: invalid file.',
+  copySuccess: 'Copied to clipboard.',
+  copyFailed: 'Copy failed. Please allow clipboard access.',
+  defaultRestLabel: 'Rest between sets',
+  step15SecLabel: '(+/- 15s)',
+  cycleWeeksLabel: 'Cycle (weeks)',
+  uprampLabel: 'Upramp',
+  uprampWeeksLabel: 'Upramp weeks',
+  overreachLabel: 'Overreach',
+  deloadLabel: 'Deload',
+  maxHrLabel: 'Max HR',
+  cardioLabel: 'Cardio',
+  intervalLabel: 'Intervals',
+  plyometricLabel: 'Plyometric',
+  cardioAbbrev: 'CAR',
+  plyometricAbbrev: 'PLY',
+  cardioPresetLabel: 'Session',
+  cardioTypeLabel: 'Mode',
+  cardioActivityLabel: 'Activity',
+  intervalHighIntensityLabel: 'High intensity (sec)',
+  intervalLowIntensityLabel: 'Low intensity (sec)',
+  intervalCyclesLabel: 'Cycles',
+  targetHrBpmLabel: 'Target BPM',
+  durationLabel: 'Duration',
+  cardioPresetLabels: {
+    recovery: 'Recovery',
+    warmup: 'Warmup',
+    zone2: 'Zone 2',
+    vo2max: 'VO2 max',
+    speed: 'Speed',
+  },
 
   goals: {
     power:       { label: 'Power',       description: '1–5 reps · 5 sets · 3:00 rest' },
@@ -203,6 +281,7 @@ const en: Translations = {
   setsLabel: 'Sets',
   repsLabel: 'Reps',
   restLabel: 'Rest',
+  rirLabel: 'RiR',
   unilateralOn: 'On',
   unilateralOff: 'Off',
   unilateralTooltip: 'Unilateral: left+right = 1 set, rest after both sides',
@@ -242,10 +321,15 @@ const en: Translations = {
   createCustomLink: 'Create custom exercise',
   exercisesCountFmt: '{n} of {m} exercises · Drag to plan',
   clearFilters: 'Clear all filters',
+  libraryTabMuscle: 'Muscle Training',
+  libraryTabEndurance: 'Endurance',
+  libraryTabPlyometric: 'Plyometric',
+  libraryTabBreakWarmup: 'Break / Warmup',
 
   muscleMapTab: 'Muscle Map',
   weeklyTab: 'Weekly',
   dailyTab: 'Daily',
+  recoveryTab: 'Recovery',
   viewingLabel: 'Viewing',
   weeklyOverview: 'Weekly overview',
   noExercisesPlanned: 'No exercises planned',
@@ -299,6 +383,20 @@ const en: Translations = {
   weeklyMapTitle: 'Weekly Training Map',
 
   fitnessLevelLabel: 'Level',
+  weekdayLong: {
+    mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday',
+  },
+  weekdayShort: {
+    mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+  },
+  recoveryFresh: 'Fresh',
+  recoveryRecovering: 'Recovering',
+  recoveryFatigued: 'Fatigued',
+  recoveryStatusCodes: { fresh: 'Fr', recovering: 'Rc', fatigued: 'Fa' },
+  recoveryCyclingView: 'Cycling view',
+  recoveryHighlightConflicts: 'Highlight fatigue conflicts',
+  recoveryConflictsBadge: 'conflicts',
+  recoveryNoConflicts: 'no conflicts',
   levelBeginner: 'Beginner',
   levelIntermediate: 'Intermediate',
   levelAdvanced: 'Advanced',
@@ -322,9 +420,43 @@ const de: Translations = {
   daysWeek: 'Tage/Woche',
   importBtn: 'Importieren',
   exportJsonBtn: 'JSON exportieren',
+  exportLlmBtn: 'Fuer LLM kopieren',
   pdfBtn: 'PDF',
+  fullPeriodPdfBtn: 'Gesamtzyklus PDF',
+  helpBtn: 'Hilfe',
+  firstStepsBtn: 'Erste Schritte',
   newPlanBtn: 'Neuer Plan',
   importError: 'Import fehlgeschlagen: ungültige Datei.',
+  copySuccess: 'In die Zwischenablage kopiert.',
+  copyFailed: 'Kopieren fehlgeschlagen. Bitte Zwischenablage-Zugriff erlauben.',
+  defaultRestLabel: 'Pause zwischen Saetzen',
+  step15SecLabel: '(+/- 15s)',
+  cycleWeeksLabel: 'Zyklus (Wochen)',
+  uprampLabel: 'Upramp',
+  uprampWeeksLabel: 'Upramp-Wochen',
+  overreachLabel: 'Overreach',
+  deloadLabel: 'Deload',
+  maxHrLabel: 'Max HF',
+  cardioLabel: 'Cardio',
+  intervalLabel: 'Intervalle',
+  plyometricLabel: 'Plyometrisch',
+  cardioAbbrev: 'CAR',
+  plyometricAbbrev: 'PLY',
+  cardioPresetLabel: 'Einheit',
+  cardioTypeLabel: 'Modus',
+  cardioActivityLabel: 'Aktivitaet',
+  intervalHighIntensityLabel: 'Hohe Intensitaet (sek)',
+  intervalLowIntensityLabel: 'Niedrige Intensitaet (sek)',
+  intervalCyclesLabel: 'Zyklen',
+  targetHrBpmLabel: 'Ziel BPM',
+  durationLabel: 'Dauer',
+  cardioPresetLabels: {
+    recovery: 'Regeneration',
+    warmup: 'Warmup',
+    zone2: 'Zone 2',
+    vo2max: 'VO2 max',
+    speed: 'Speed',
+  },
 
   goals: {
     power:       { label: 'Power',         description: '1–5 Wdh. · 5 Sätze · 3:00 Pause' },
@@ -389,6 +521,7 @@ const de: Translations = {
   setsLabel: 'Sätze',
   repsLabel: 'Wdh.',
   restLabel: 'Pause',
+  rirLabel: 'RiR',
   unilateralOn: 'An',
   unilateralOff: 'Aus',
   unilateralTooltip: 'Unilateral: links+rechts = 1 Satz, Pause nach beiden Seiten',
@@ -428,10 +561,15 @@ const de: Translations = {
   createCustomLink: 'Eigene Übung erstellen',
   exercisesCountFmt: '{n} von {m} Übungen · Zum Plan ziehen',
   clearFilters: 'Alle Filter zurücksetzen',
+  libraryTabMuscle: 'Muskeltraining',
+  libraryTabEndurance: 'Ausdauer',
+  libraryTabPlyometric: 'Plyometrisch',
+  libraryTabBreakWarmup: 'Pause / Warmup',
 
   muscleMapTab: 'Muskelkarte',
   weeklyTab: 'Wöchentlich',
   dailyTab: 'Täglich',
+  recoveryTab: 'Erholung',
   viewingLabel: 'Vorschau',
   weeklyOverview: 'Wochenübersicht',
   noExercisesPlanned: 'Keine Übungen geplant',
@@ -485,6 +623,20 @@ const de: Translations = {
   weeklyMapTitle: 'Wöchentliche Muskelübersicht',
 
   fitnessLevelLabel: 'Level',
+  weekdayLong: {
+    mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag',
+  },
+  weekdayShort: {
+    mon: 'Mo', tue: 'Di', wed: 'Mi', thu: 'Do', fri: 'Fr', sat: 'Sa', sun: 'So',
+  },
+  recoveryFresh: 'Frisch',
+  recoveryRecovering: 'Erholung',
+  recoveryFatigued: 'Ermuedet',
+  recoveryStatusCodes: { fresh: 'Fr', recovering: 'Rc', fatigued: 'Fa' },
+  recoveryCyclingView: 'Zyklusansicht',
+  recoveryHighlightConflicts: 'Fatigue-Konflikte hervorheben',
+  recoveryConflictsBadge: 'Konflikte',
+  recoveryNoConflicts: 'keine',
   levelBeginner: 'Anfänger',
   levelIntermediate: 'Fortgeschritten',
   levelAdvanced: 'Profi',

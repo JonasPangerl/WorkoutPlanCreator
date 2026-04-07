@@ -63,6 +63,7 @@ function FilterPill<T extends string>({
 }
 
 export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom, onDeleteCustom }) => {
+  const [libraryTab, setLibraryTab] = useState<'muscle' | 'endurance' | 'plyometric' | 'breakWarmup'>('muscle');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [goalFilter, setGoalFilter] = useState<Goal | 'all'>('all');
@@ -100,6 +101,10 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
   const filtered = useMemo(() => {
     return allExercises.filter((ex) => {
       if (selectedCategory !== 'All' && !ex.categories.includes(selectedCategory)) return false;
+      if (libraryTab === 'muscle' && (ex.exerciseType === 'cardio' || ex.exerciseType === 'plyometric' || ex.exerciseType === 'break' || ex.exerciseType === 'warmup')) return false;
+      if (libraryTab === 'endurance' && ex.exerciseType !== 'cardio') return false;
+      if (libraryTab === 'plyometric' && ex.exerciseType !== 'plyometric') return false;
+      if (libraryTab === 'breakWarmup' && ex.exerciseType !== 'break' && ex.exerciseType !== 'warmup') return false;
       if (search) {
         const q = search.toLowerCase();
         const nameEN = ex.name.toLowerCase();
@@ -117,14 +122,15 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
       if (levelFilter !== 'all' && ex.difficulty !== levelFilter) return false;
       return true;
     });
-  }, [allExercises, selectedCategory, search, goalFilter, typeFilter, levelFilter, t]);
+  }, [allExercises, libraryTab, selectedCategory, search, goalFilter, typeFilter, levelFilter, t]);
 
   const categories = useMemo(() => {
+    if (libraryTab !== 'muscle') return ['All'];
     const customCats = customExercises.flatMap((e) => e.categories);
     const base = EXERCISE_CATEGORIES.filter((c) => c !== 'All');
     const extra = [...new Set(customCats)].filter((c) => !base.includes(c));
     return ['All', ...base, ...extra];
-  }, [customExercises]);
+  }, [customExercises, libraryTab]);
 
   const hasActiveFilters = goalFilter !== 'all' || typeFilter !== 'all' || levelFilter !== 'all' || selectedCategory !== 'All' || search;
 
@@ -170,6 +176,12 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
             </button>
           </div>
         </div>
+        <div className="flex rounded-lg overflow-hidden border mb-2" style={{ borderColor: '#2a2d42' }}>
+          <button onClick={() => setLibraryTab('muscle')} className="flex-1 py-1 text-[10px] font-semibold" style={{ background: libraryTab === 'muscle' ? '#f9731622' : 'transparent', color: libraryTab === 'muscle' ? '#f97316' : '#6b7280' }}>{t.libraryTabMuscle}</button>
+          <button onClick={() => setLibraryTab('endurance')} className="flex-1 py-1 text-[10px] font-semibold" style={{ background: libraryTab === 'endurance' ? '#0ea5e922' : 'transparent', color: libraryTab === 'endurance' ? '#38bdf8' : '#6b7280' }}>{t.libraryTabEndurance}</button>
+          <button onClick={() => setLibraryTab('plyometric')} className="flex-1 py-1 text-[10px] font-semibold" style={{ background: libraryTab === 'plyometric' ? '#f59e0b22' : 'transparent', color: libraryTab === 'plyometric' ? '#fbbf24' : '#6b7280' }}>{t.libraryTabPlyometric}</button>
+          <button onClick={() => setLibraryTab('breakWarmup')} className="flex-1 py-1 text-[10px] font-semibold" style={{ background: libraryTab === 'breakWarmup' ? '#22c55e22' : 'transparent', color: libraryTab === 'breakWarmup' ? '#4ade80' : '#6b7280' }}>{t.libraryTabBreakWarmup}</button>
+        </div>
 
         {/* Search */}
         <div className="relative mb-2">
@@ -194,6 +206,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
         </div>
 
         {/* Category filter — wrapping pills */}
+        {libraryTab === 'muscle' && (
         <div className="flex gap-1 flex-wrap mb-2">
           {categories.map((cat) => (
             <button
@@ -210,8 +223,10 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
             </button>
           ))}
         </div>
+        )}
 
         {/* ── Sub-filters ── */}
+        {libraryTab === 'muscle' && (
         <div className="space-y-1.5 pt-1 border-t" style={{ borderColor: '#1e2035' }}>
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider w-8 flex-shrink-0">{t.goals['strength']?.label.slice(0, 4) ?? 'Goal'}</span>
@@ -223,7 +238,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
               options={typeFilters}
               value={typeFilter}
               onChange={setTypeFilter}
-              colorMap={{ compound: '#3b82f6', isolation: '#a78bfa', all: '#6b7280' }}
+              colorMap={{ compound: '#3b82f6', isolation: '#a78bfa', cardio: '#0ea5e9', plyometric: '#f59e0b', all: '#6b7280' }}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -239,6 +254,7 @@ export const ExerciseLibrary: React.FC<Props> = ({ customExercises, onAddCustom,
             </button>
           )}
         </div>
+        )}
       </div>
 
       {/* Exercise list */}

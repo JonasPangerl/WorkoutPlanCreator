@@ -9,6 +9,7 @@ import {
   formatDuration,
   calcWeeklyMuscleVolume,
 } from './calculations';
+import { buildWeekPhases, projectExerciseForPhase } from './periodization';
 
 const BG = '#0f1117';
 const SURFACE = '#13152a';
@@ -242,4 +243,87 @@ export function exportToPDF(plan: WorkoutPlan): void {
   }
 
   pdf.save('workout-plan.pdf');
+}
+
+export function exportFullPeriodPDF(plan: WorkoutPlan): void {
+  const allExercises: Exercise[] = [...EXERCISES, ...plan.customExercises];
+  const phases = buildWeekPhases(plan.periodization);
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PAGE_W = 297;
+  const PAGE_H = 210;
+  const MARGIN = 10;
+
+  const setFont = (size: number, style: 'normal' | 'bold' = 'normal', color = TEXT_PRIMARY) => {
+    pdf.setFontSize(size);
+    pdf.setFont('helvetica', style);
+    pdf.setTextColor(...c(color));
+  };
+  const fillRect = (x: number, y: number, w: number, h: number, color: string) => {
+    pdf.setFillColor(...c(color));
+    pdf.rect(x, y, w, h, 'F');
+  };
+
+  phases.forEach((phase, index) => {
+    if (index > 0) pdf.addPage();
+    fillRect(0, 0, PAGE_W, PAGE_H, BG);
+
+    let y = MARGIN;
+    fillRect(MARGIN, y, PAGE_W - MARGIN * 2, 12, SURFACE);
+    pdf.setDrawColor(...c(BORDER));
+    pdf.rect(MARGIN, y, PAGE_W - MARGIN * 2, 12);
+    setFont(11, 'bold', ACCENT);
+    pdf.text(`Week ${phase.week} - ${phase.phase.toUpperCase()}`, MARGIN + 3, y + 7.5);
+    setFont(8, 'normal', TEXT_SECONDARY);
+    pdf.text(`Set x${phase.setMultiplier.toFixed(2)}  Intensity x${phase.intensityFactor.toFixed(2)}  RiR offset ${phase.rirOffset >= 0 ? '+' : ''}${phase.rirOffset}`, MARGIN + 72, y + 7.5);
+    y += 16;
+
+    for (const day of plan.days) {
+      const rows = Math.max(1, day.exercises.length);
+      const needed = 10 + 6 + rows * 7 + 4;
+      if (y + needed > PAGE_H - MARGIN) {
+        pdf.addPage();
+        fillRect(0, 0, PAGE_W, PAGE_H, BG);
+        y = MARGIN;
+      }
+
+      fillRect(MARGIN, y, PAGE_W - MARGIN * 2, 8, '#1a1d2e');
+      setFont(8.5, 'bold', TEXT_PRIMARY);
+      pdf.text(`${day.label} (${day.weekDay.toUpperCase()})`, MARGIN + 2, y + 5.3);
+      y += 9;
+
+      setFont(7, 'bold', TEXT_MUTED);
+      pdf.text('Exercise', MARGIN + 2, y + 4);
+      pdf.text('Target', MARGIN + 88, y + 4);
+      pdf.text('Actual Weight', MARGIN + 146, y + 4);
+      pdf.text('Actual Sets/Reps', MARGIN + 187, y + 4);
+      pdf.text('Notes', MARGIN + 237, y + 4);
+      pdf.line(MARGIN, y + 5.5, PAGE_W - MARGIN, y + 5.5);
+      y += 6.5;
+
+      if (day.exercises.length === 0) {
+        setFont(7, 'normal', TEXT_MUTED);
+        pdf.text('Rest day / no session', MARGIN + 2, y + 4);
+        y += 7;
+      } else {
+        day.exercises.forEach((planned, row) => {
+          const projected = projectExerciseForPhase(planned, phase);
+          const ex = allExercises.find((e) => e.id === planned.exerciseId);
+          const name = (ex?.name ?? planned.exerciseId).slice(0, 34);
+          const target = `${projected.sets}x ${projected.repMin}-${projected.repMax} | RiR ${projected.rir} | Rest ${projected.restSeconds}s`;
+          if (row % 2 === 0) fillRect(MARGIN, y, PAGE_W - MARGIN * 2, 6.8, '#12141f');
+          setFont(7, 'normal', TEXT_PRIMARY);
+          pdf.text(name, MARGIN + 2, y + 4.5);
+          setFont(7, 'normal', TEXT_SECONDARY);
+          pdf.text(target, MARGIN + 88, y + 4.5);
+          pdf.rect(MARGIN + 143, y + 1, 37, 5); // weight
+          pdf.rect(MARGIN + 184, y + 1, 47, 5); // actual sets/reps
+          pdf.rect(MARGIN + 234, y + 1, 53, 5); // notes
+          y += 7;
+        });
+      }
+      y += 2;
+    }
+  });
+
+  pdf.save('workout-full-period-plan.pdf');
 }

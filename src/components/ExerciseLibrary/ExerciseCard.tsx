@@ -13,12 +13,21 @@ interface Props {
 }
 
 const DIFFICULTY_COLORS = { beginner: '#22c55e', intermediate: '#f97316', advanced: '#ef4444' };
-const TYPE_COLORS = { compound: '#3b82f6', isolation: '#a78bfa' };
+const TYPE_COLORS = { compound: '#3b82f6', isolation: '#a78bfa', cardio: '#0ea5e9', plyometric: '#f59e0b', break: '#22c55e', warmup: '#84cc16' };
 
 export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail }) => {
+  const blockType = exercise.exerciseType === 'cardio'
+    ? (exercise.id.includes('intervals-preset') ? 'interval' : 'cardio')
+    : exercise.exerciseType === 'plyometric'
+      ? 'plyometric'
+      : exercise.exerciseType === 'break'
+        ? 'break'
+        : exercise.exerciseType === 'warmup'
+          ? 'warmupSets'
+          : 'strength';
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: exercise.id,
-    data: { type: 'exercise', exerciseId: exercise.id, defaultGoal: exercise.defaultGoal },
+    data: { type: 'exercise', exerciseId: exercise.id, defaultGoal: exercise.defaultGoal, blockType },
   });
   const { t } = useTranslation();
 
@@ -58,7 +67,7 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
               <span className="text-[9px] px-1 rounded" style={{ background: '#f9731618', color: '#f9731680' }}>1x</span>
             )}
             <span className="text-[9px] px-1.5 rounded-full font-medium" style={{ background: `${typeColor}18`, color: typeColor }}>
-              {exercise.exerciseType === 'compound' ? t.compoundAbbrev : t.isolationAbbrev}
+              {exercise.exerciseType === 'compound' ? t.compoundAbbrev : exercise.exerciseType === 'isolation' ? t.isolationAbbrev : exercise.exerciseType === 'cardio' ? t.cardioAbbrev : exercise.exerciseType === 'plyometric' ? t.plyometricAbbrev : exercise.exerciseType === 'break' ? 'BRK' : 'WU'}
             </span>
             <span className="text-[9px] px-1.5 rounded-full font-medium" style={{ background: `${diffColor}18`, color: diffColor }}>
               {diffAbbrev}
@@ -116,7 +125,7 @@ export const ExerciseCard: React.FC<Props> = ({ exercise, viewMode, onOpenDetail
             </div>
             <div className="flex gap-1 mb-2 flex-wrap">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>
-                {exercise.exerciseType === 'compound' ? t.compoundLabel : t.isolationLabel}
+                {exercise.exerciseType === 'compound' ? t.compoundLabel : exercise.exerciseType === 'isolation' ? t.isolationLabel : exercise.exerciseType === 'cardio' ? t.cardioLabel : exercise.exerciseType === 'plyometric' ? t.plyometricLabel : exercise.exerciseType === 'break' ? 'Break' : 'Warmup'}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${diffColor}18`, color: diffColor, border: `1px solid ${diffColor}30` }}>
                 {exercise.difficulty === 'beginner' ? t.beginnerLabel : exercise.difficulty === 'intermediate' ? t.intermediateLabel : t.advancedLabel}

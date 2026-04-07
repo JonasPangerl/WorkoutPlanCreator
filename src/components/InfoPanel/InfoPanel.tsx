@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import type { Exercise, TrainingDay, MuscleGroup } from '../../types';
+import type { Exercise, TrainingDay, MuscleGroup, FitnessLevel } from '../../types';
 import { EXERCISES } from '../../data/exercises';
 import { MuscleDiagram } from '../MuscleDiagram/MuscleDiagram';
 import { StatsPanel } from '../StatsPanel/StatsPanel';
 import { calcWeeklyMuscleVolume } from '../../utils/calculations';
 import { MUSCLE_COLORS } from '../../utils/categoryColors';
 import { useTranslation } from '../../contexts/LanguageContext';
+import { buildPrimaryFatigueConflictMap, buildRecoveryCalendar } from '../../utils/recovery';
+import { RecoveryCalendar } from './RecoveryCalendar';
+import { getPlannedMuscles } from '../../utils/cardio';
 
 interface Props {
   hoveredExercise: Exercise | null;
   days: TrainingDay[];
   customExercises: Exercise[];
   colorMode: boolean;
+  fitnessLevel: FitnessLevel;
 }
 
 function getDayMuscles(day: TrainingDay, allExercises: Exercise[]) {
@@ -20,8 +24,9 @@ function getDayMuscles(day: TrainingDay, allExercises: Exercise[]) {
   for (const planned of day.exercises) {
     const ex = allExercises.find((e) => e.id === planned.exerciseId);
     if (!ex) continue;
-    ex.primaryMuscles.forEach((m) => primary.add(m));
-    ex.secondaryMuscles.forEach((m) => secondary.add(m));
+    const muscles = getPlannedMuscles(planned, ex);
+    muscles.primary.forEach((m) => primary.add(m));
+    muscles.secondary.forEach((m) => secondary.add(m));
   }
   return {
     primary: Array.from(primary) as MuscleGroup[],
@@ -29,13 +34,18 @@ function getDayMuscles(day: TrainingDay, allExercises: Exercise[]) {
   };
 }
 
-export const InfoPanel: React.FC<Props> = ({ hoveredExercise, days, customExercises, colorMode }) => {
-  const [tab, setTab] = useState<'body' | 'weekly' | 'daily' | 'overview'>('body');
+export const InfoPanel: React.FC<Props> = ({ hoveredExercise, days, customExercises, colorMode, fitnessLevel }) => {
+  const [tab, setTab] = useState<'body' | 'weekly' | 'daily' | 'overview' | 'recovery'>('body');
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [cyclingView, setCyclingView] = useState(false);
+  const [highlightConflicts, setHighlightConflicts] = useState(false);
   const { t } = useTranslation();
 
   const allExercises = [...EXERCISES, ...customExercises];
   const weeklyVolume = calcWeeklyMuscleVolume(days, allExercises);
+  const recoveryMode = cyclingView ? 'cyclingWeek' : 'singleWeek';
+  const recoveryCalendar = buildRecoveryCalendar(days, allExercises, recoveryMode, fitnessLevel);
+  const conflictMap = buildPrimaryFatigueConflictMap(days, allExercises, recoveryMode, fitnessLevel);
 
   const safeDay = days[selectedDayIndex] ?? days[0];
   const dailyVolume = safeDay ? calcWeeklyMuscleVolume([safeDay], allExercises) : {};
@@ -48,8 +58,9 @@ export const InfoPanel: React.FC<Props> = ({ hoveredExercise, days, customExerci
     for (const planned of day.exercises) {
       const ex = allExercises.find((e) => e.id === planned.exerciseId);
       if (!ex) continue;
-      ex.primaryMuscles.forEach((m) => allPrimary.add(m));
-      ex.secondaryMuscles.forEach((m) => allSecondary.add(m));
+      const muscles = getPlannedMuscles(planned, ex);
+      muscles.primary.forEach((m) => allPrimary.add(m));
+      muscles.secondary.forEach((m) => allSecondary.add(m));
     }
   }
 
@@ -65,6 +76,7 @@ export const InfoPanel: React.FC<Props> = ({ hoveredExercise, days, customExerci
     { id: 'overview' as const, label: t.overviewTab },
     { id: 'weekly' as const,   label: t.weeklyTab },
     { id: 'daily' as const,    label: t.dailyTab },
+    { id: 'recovery' as const, label: t.recoveryTab },
   ];
 
   const ColorLegend = () => (
@@ -325,6 +337,27 @@ export const InfoPanel: React.FC<Props> = ({ hoveredExercise, days, customExerci
               </div>
             )}
           </div>
+        )}
+
+        {tab === 'recovery' && (
+          <RecoveryCalendar
+            calendar={recoveryCalendar}
+            days={days}
+            conflictMap={conflictMap}
+            weekdayLabels={t.weekdayShort}
+            statusCodes={t.recoveryStatusCodes}
+            freshLabel={t.recoveryFresh}
+            recoveringLabel={t.recoveryRecovering}
+            fatiguedLabel={t.recoveryFatigued}
+            cyclingView={cyclingView}
+            cyclingViewLabel={t.recoveryCyclingView}
+            onToggleCyclingView={() => setCyclingView((v) => !v)}
+            highlightConflicts={highlightConflicts}
+            highlightConflictsLabel={t.recoveryHighlightConflicts}
+            onToggleHighlightConflicts={() => setHighlightConflicts((v) => !v)}
+            conflictsBadgeLabel={t.recoveryConflictsBadge}
+            noConflictsLabel={t.recoveryNoConflicts}
+          />
         )}
       </div>
     </div>

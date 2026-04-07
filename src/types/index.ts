@@ -1,12 +1,17 @@
 export type Goal = 'power' | 'strength' | 'hypertrophy' | 'endurance';
 export type FitnessLevel = 'beginner' | 'intermediate' | 'advanced';
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+export type RecoveryStatus = 'fresh' | 'recovering' | 'fatigued';
+export type PlannedBlockType = 'strength' | 'cardio' | 'interval' | 'plyometric' | 'break' | 'warmupSets';
+export type CardioPreset = 'recovery' | 'warmup' | 'zone2' | 'vo2max' | 'speed';
+export type CardioActivity = 'run' | 'bike' | 'rower' | 'crosstrainer' | 'stairmaster' | 'walk';
 
 export const FITNESS_LEVEL_MULTIPLIER: Record<FitnessLevel, number> = {
   beginner:     1.6,
   intermediate: 1.0,
   advanced:     0.65,
 };
-export type ExerciseType = 'compound' | 'isolation';
+export type ExerciseType = 'compound' | 'isolation' | 'cardio' | 'plyometric' | 'break' | 'warmup';
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export type MuscleGroup =
@@ -46,22 +51,46 @@ export interface Exercise {
 export interface PlannedExercise {
   instanceId: string;
   exerciseId: string;
+  blockType: PlannedBlockType;
   goal: Goal;
   sets: number;
   repMin: number;
   repMax: number;
   restSeconds: number;
+  rir: number;
   isUnilateral: boolean;
+  durationSeconds?: number;
+  cardioPreset?: CardioPreset;
+  cardioActivity?: CardioActivity;
+  targetHrMinPercent?: number;
+  targetHrMaxPercent?: number;
+  intervalMode?: 'simple' | 'advanced';
+  intervalWorkSeconds?: number;
+  intervalRestSeconds?: number;
+  intervalRounds?: number;
+  intervalSegments?: { name: 'warmup' | 'work' | 'rest' | 'cooldown'; durationSeconds: number; rounds?: number }[];
 }
 
 export interface TrainingDay {
   id: string;
   label: string;
+  weekDay: Weekday;
   exercises: PlannedExercise[];
+}
+
+export interface PeriodizationSettings {
+  cycleWeeks: number;
+  uprampEnabled: boolean;
+  uprampWeeks: number;
+  overreachEnabled: boolean;
+  deloadEnabled: boolean;
 }
 
 export interface WorkoutPlan {
   trainingsPerWeek: number;
+  defaultRestSeconds: number;
+  maxHeartRate: number;
+  periodization: PeriodizationSettings;
   days: TrainingDay[];
   customExercises: Exercise[];
 }

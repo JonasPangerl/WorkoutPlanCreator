@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TrainingDay, PlannedExercise, Exercise } from '../../types';
-import type { Goal, FitnessLevel } from '../../types';
+import type { Goal, FitnessLevel, Weekday } from '../../types';
 import { calcDayDurationSeconds, formatDuration } from '../../utils/calculations';
 import { calcTrainingLoad } from '../../utils/trainingLoad';
 import { PlannedExerciseRow } from './PlannedExerciseRow';
@@ -13,6 +13,7 @@ interface Props {
   day: TrainingDay;
   allExercises: Exercise[];
   onUpdateLabel: (label: string) => void;
+  onUpdateWeekday: (weekDay: Weekday) => void;
   onRemoveExercise: (instanceId: string) => void;
   onUpdateExercise: (instanceId: string, updates: Partial<PlannedExercise>) => void;
   onChangeGoal: (instanceId: string, goal: Goal) => void;
@@ -20,12 +21,14 @@ interface Props {
   colorMode: boolean;
   compactMode: boolean;
   fitnessLevel: FitnessLevel;
+  maxHeartRate: number;
 }
 
 export const TrainingDayColumn: React.FC<Props> = ({
   day,
   allExercises,
   onUpdateLabel,
+  onUpdateWeekday,
   onRemoveExercise,
   onUpdateExercise,
   onChangeGoal,
@@ -33,6 +36,7 @@ export const TrainingDayColumn: React.FC<Props> = ({
   colorMode,
   compactMode,
   fitnessLevel,
+  maxHeartRate,
 }) => {
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(day.label);
@@ -46,6 +50,7 @@ export const TrainingDayColumn: React.FC<Props> = ({
   const totalSeconds = calcDayDurationSeconds(day);
   const exerciseIds = day.exercises.map((e) => e.instanceId);
   const load = calcTrainingLoad(day, allExercises);
+  const WEEKDAY_OPTIONS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
   return (
     <div
@@ -86,6 +91,19 @@ export const TrainingDayColumn: React.FC<Props> = ({
             </span>
           )}
         </div>
+        <div className="mt-2">
+          <select
+            value={day.weekDay}
+            onChange={(e) => onUpdateWeekday(e.target.value as Weekday)}
+            className="w-full rounded-md text-[10px] px-2 py-1 bg-[#13152a] border border-[#2a2d42] text-gray-300"
+          >
+            {WEEKDAY_OPTIONS.map((w) => (
+              <option key={w} value={w}>
+                {t.weekdayLong[w]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Drop zone */}
@@ -111,6 +129,7 @@ export const TrainingDayColumn: React.FC<Props> = ({
                 onHover={onHoverExercise}
                 colorMode={colorMode}
                 compactMode={compactMode}
+                maxHeartRate={maxHeartRate}
               />
             );
           })}

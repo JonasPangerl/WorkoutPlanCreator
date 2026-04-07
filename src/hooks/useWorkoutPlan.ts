@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { WorkoutPlan, TrainingDay, PlannedExercise, Exercise } from '../types';
+import type { WorkoutPlan, TrainingDay, PlannedExercise, Exercise, PlannedBlockType } from '../types';
 import type { Goal } from '../types';
 import { loadPlan, savePlan } from '../utils/storage';
 import { buildPlannedExercise, applyGoalPreset } from '../utils/presets';
-import { EXERCISES } from '../data/exercises';
 
 function generateId() {
   return Math.random().toString(36).slice(2, 10);
@@ -12,11 +11,20 @@ function generateId() {
 function defaultPlan(): WorkoutPlan {
   return {
     trainingsPerWeek: 4,
+    defaultRestSeconds: 120,
+    maxHeartRate: 190,
+    periodization: {
+      cycleWeeks: 6,
+      uprampEnabled: false,
+      uprampWeeks: 2,
+      overreachEnabled: true,
+      deloadEnabled: true,
+    },
     days: [
-      { id: generateId(), label: 'Day 1 – Push', exercises: [] },
-      { id: generateId(), label: 'Day 2 – Pull', exercises: [] },
-      { id: generateId(), label: 'Day 3 – Legs', exercises: [] },
-      { id: generateId(), label: 'Day 4 – Upper', exercises: [] },
+      { id: generateId(), label: 'Day 1 – Push', weekDay: 'mon', exercises: [] },
+      { id: generateId(), label: 'Day 2 – Pull', weekDay: 'wed', exercises: [] },
+      { id: generateId(), label: 'Day 3 – Legs', weekDay: 'fri', exercises: [] },
+      { id: generateId(), label: 'Day 4 – Upper', weekDay: 'sat', exercises: [] },
     ],
     customExercises: [],
   };
@@ -38,6 +46,7 @@ export function useWorkoutPlan() {
         const extra: TrainingDay[] = Array.from({ length: clampedN - current.length }, (_, i) => ({
           id: generateId(),
           label: `Day ${current.length + i + 1}`,
+          weekDay: 'mon',
           exercises: [],
         }));
         return { ...prev, trainingsPerWeek: clampedN, days: [...current, ...extra] };
@@ -53,18 +62,56 @@ export function useWorkoutPlan() {
     }));
   }, []);
 
+  const updateDayWeekday = useCallback((dayId: string, weekDay: TrainingDay['weekDay']) => {
+    setPlan((prev) => {
+      const currentDay = prev.days.find((d) => d.id === dayId);
+      if (!currentDay) return prev;
+      return {
+        ...prev,
+        days: prev.days.map((d) => {
+          if (d.id === dayId) return { ...d, weekDay };
+          if (d.weekDay === weekDay) return { ...d, weekDay: currentDay.weekDay };
+          return d;
+        }),
+      };
+    });
+  }, []);
+
   // ── Exercises in a day ─────────────────────────────────
-  const addExerciseToDay = useCallback((dayId: string, exerciseId: string, goal: Goal, customExercises: Exercise[] = []) => {
+  const addExerciseToDay = useCallback((dayId: string, exerciseId: string, goal: Goal, blockType: PlannedBlockType = 'strength') => {
     const instanceId = generateId();
-    const allEx = [...EXERCISES, ...customExercises];
-    const ex = allEx.find((e) => e.id === exerciseId);
-    const planned = buildPlannedExercise(exerciseId, goal, instanceId, false);
-    void ex; // canBeUnilateral starts false; user toggles manually
+    const planned = buildPlannedExercise(exerciseId, goal, instanceId, blockType, false, plan.defaultRestSeconds);
     setPlan((prev) => ({
       ...prev,
       days: prev.days.map((d) =>
         d.id === dayId ? { ...d, exercises: [...d.exercises, planned] } : d
       ),
+    }));
+  }, [plan.defaultRestSeconds]);
+
+  const setMaxHeartRate = useCallback((maxHeartRate: number) => {
+    setPlan((prev) => ({
+      ...prev,
+      maxHeartRate: Math.max(120, Math.min(230, maxHeartRate)),
+    }));
+  }, []);
+
+  const setDefaultRestSeconds = useCallback((restSeconds: number) => {
+    setPlan((prev) => ({
+      ...prev,
+      defaultRestSeconds: Math.max(15, Math.min(600, restSeconds)),
+    }));
+  }, []);
+
+  const updatePeriodization = useCallback((updates: Partial<WorkoutPlan['periodization']>) => {
+    setPlan((prev) => ({
+      ...prev,
+      periodization: {
+        ...prev.periodization,
+        ...updates,
+        cycleWeeks: Math.max(2, Math.min(16, updates.cycleWeeks ?? prev.periodization.cycleWeeks)),
+        uprampWeeks: Math.max(1, Math.min(8, updates.uprampWeeks ?? prev.periodization.uprampWeeks)),
+      },
     }));
   }, []);
 
@@ -147,7 +194,11 @@ export function useWorkoutPlan() {
   return {
     plan,
     setTrainingsPerWeek,
+    setDefaultRestSeconds,
+    setMaxHeartRate,
+    updatePeriodization,
     updateDayLabel,
+    updateDayWeekday,
     addExerciseToDay,
     removeExerciseFromDay,
     updateExercise,

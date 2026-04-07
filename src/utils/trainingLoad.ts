@@ -1,5 +1,6 @@
 import type { TrainingDay, Exercise } from '../types';
 import { calcDayDurationSeconds } from './calculations';
+import { countsCardioForMuscleMap } from './cardio';
 
 /** Per-goal CNS taxation factor (0–1) */
 const CNS_GOAL_FACTOR: Record<string, number> = {
@@ -91,14 +92,34 @@ export function calcTrainingLoad(day: TrainingDay, allExercises: Exercise[]): Tr
 
   let cnsRaw = 0;
   let muscleRaw = 0;
+  let mentalRaw = 0;
   let compoundCount = 0;
 
   for (const planned of day.exercises) {
     const ex = allExercises.find((e) => e.id === planned.exerciseId);
     if (!ex) continue;
+    if (planned.blockType === 'cardio') {
+      if (!countsCardioForMuscleMap(planned)) {
+        continue;
+      }
+      const cardioMinutes = (planned.durationSeconds ?? 0) / 60;
+      mentalRaw += cardioMinutes * 0.6;
+      muscleRaw += cardioMinutes * 1.2;
+      continue;
+    }
+    if (planned.blockType === 'interval') {
+      const intervalMinutes = ((planned.intervalRounds ?? 1) * ((planned.intervalWorkSeconds ?? 0) + (planned.intervalRestSeconds ?? 0))) / 60;
+      cnsRaw += intervalMinutes * 0.7;
+      muscleRaw += intervalMinutes * 4;
+      mentalRaw += intervalMinutes * 0.8;
+      continue;
+    }
+    if (planned.blockType === 'break' || planned.blockType === 'warmupSets') {
+      continue;
+    }
 
     const goalFactor = CNS_GOAL_FACTOR[planned.goal] ?? 0.5;
-    const typeMult = ex.exerciseType === 'compound' ? 1.2 : 0.7;
+    const typeMult = ex.exerciseType === 'compound' ? 1.2 : ex.exerciseType === 'plyometric' ? 1.1 : 0.7;
 
     // CNS: intensity-driven — sets × goal × compound multiplier × sum of primary muscle sizes
     const cnsFactor = cnsLoadFactor(ex.primaryMuscles);
@@ -115,7 +136,7 @@ export function calcTrainingLoad(day: TrainingDay, allExercises: Exercise[]): Tr
 
   // Mental: session duration + compound movement complexity
   const sessionMinutes = calcDayDurationSeconds(day) / 60;
-  const mentalRaw = sessionMinutes + compoundCount * 3.5;
+  mentalRaw += sessionMinutes + compoundCount * 3.5;
 
   const cns = clamp100((cnsRaw / CNS_MAX) * 100);
   const muscle = clamp100((muscleRaw / MUSCLE_MAX) * 100);

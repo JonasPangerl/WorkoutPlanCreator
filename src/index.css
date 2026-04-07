@@ -32,3 +32,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
+
+select {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+}
+
+select:focus {
+  outline: 1px solid #64748b;
+}
+
+option {
+  background: #0f172a;
+  color: #e5e7eb;
+}

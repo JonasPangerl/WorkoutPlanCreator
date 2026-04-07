@@ -1,12 +1,24 @@
 import type { PlannedExercise, TrainingDay, MuscleGroup, Exercise } from '../types';
 import { SECONDS_PER_REP } from './presets';
+import { countsCardioForMuscleMap, getPlannedMuscles } from './cardio';
 
 export function calcExerciseDurationSeconds(ex: PlannedExercise): number {
+  if (ex.blockType === 'cardio' || ex.blockType === 'break') {
+    return Math.max(60, ex.durationSeconds ?? 0);
+  }
+  if (ex.blockType === 'interval') {
+    if (ex.intervalMode === 'advanced' && ex.intervalSegments?.length) {
+      return ex.intervalSegments.reduce((sum, seg) => sum + (seg.durationSeconds * (seg.rounds ?? 1)), 0);
+    }
+    const rounds = Math.max(1, ex.intervalRounds ?? 1);
+    return rounds * ((ex.intervalWorkSeconds ?? 0) + (ex.intervalRestSeconds ?? 0));
+  }
   const avgReps = (ex.repMin + ex.repMax) / 2;
   // Unilateral: do left then right = 2× reps per set, but only one rest after both sides
   const repsPerSet = ex.isUnilateral ? avgReps * 2 : avgReps;
-  const workTime = ex.sets * repsPerSet * SECONDS_PER_REP;
-  const restTime = (ex.sets - 1) * ex.restSeconds;
+  const sets = Math.max(1, ex.sets);
+  const workTime = sets * repsPerSet * SECONDS_PER_REP;
+  const restTime = Math.max(0, sets - 1) * ex.restSeconds;
   return Math.round(workTime + restTime);
 }
 
@@ -40,11 +52,13 @@ export function calcWeeklyMuscleVolume(
       const exercise = allExercises.find((e) => e.id === planned.exerciseId);
       if (!exercise) continue;
 
-      for (const muscle of exercise.primaryMuscles) {
+      if ((planned.blockType === 'cardio' || planned.blockType === 'interval') && !countsCardioForMuscleMap(planned)) continue;
+      const muscles = getPlannedMuscles(planned, exercise);
+      for (const muscle of muscles.primary) {
         if (!result[muscle]) result[muscle] = { primarySets: 0, secondarySets: 0 };
         result[muscle].primarySets += planned.sets;
       }
-      for (const muscle of exercise.secondaryMuscles) {
+      for (const muscle of muscles.secondary) {
         if (!result[muscle]) result[muscle] = { primarySets: 0, secondarySets: 0 };
         result[muscle].secondarySets += planned.sets;
       }
