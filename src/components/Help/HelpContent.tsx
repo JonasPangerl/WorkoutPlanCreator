@@ -45,13 +45,13 @@ export const HelpContent: React.FC = () => {
       </section>
 
       <section>
-        <h3 className="text-base font-semibold text-white mb-1">New features overview</h3>
+        <h3 className="text-base font-semibold text-white mb-1">Feature overview</h3>
         <ul className="list-disc pl-5 space-y-1">
-          <li>Recovery tab: status codes Fr/Rc/Fa with colorblind-safe colors and cycling-view toggle.</li>
-          <li>Periodization controls: cycle length, upramp, overreach, and deload switches in the top bar.</li>
-          <li>PDF exports: weekly summary PDF plus full-period PDF with tracking fields per session.</li>
-          <li>Cardio/interval blocks: choose HR% zone presets; target BPM is auto-calculated and read-only.</li>
-          <li>Plyometric blocks: use dedicated block type for jump/explosive session planning.</li>
+          <li>Recovery tab: track status codes Fr/Rc/Fa with colorblind-safe colors and a cycling-view toggle.</li>
+          <li>Periodization controls: configure cycle length, upramp, overreach, and deload from the top bar.</li>
+          <li>PDF exports: generate a weekly summary PDF or a full-period PDF with tracking fields per session.</li>
+          <li>Cardio and interval blocks: select HR% zone presets while target BPM is auto-calculated and read-only.</li>
+          <li>Plyometric blocks: plan jump and explosive sessions with a dedicated block type.</li>
         </ul>
       </section>
     </div>

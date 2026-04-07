@@ -167,10 +167,10 @@ function AppInner() {
       <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0a0b12' }}>
         {/* Header */}
         <header
-          className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b"
+          className="flex-shrink-0 flex flex-col items-start gap-2 px-4 lg:px-6 py-3 border-b"
           style={{ background: '#0f1117', borderColor: '#1e2035' }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setShowFirstSteps(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors hover:border-emerald-500/40"
@@ -189,7 +189,8 @@ function AppInner() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
             {/* Language toggle */}
             <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#2a2d42' }}>
               {(['en', 'de'] as Locale[]).map((l) => (
@@ -375,6 +376,9 @@ function AppInner() {
               )}
             </div>
 
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
             {/* Import */}
             <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
             <button
@@ -445,6 +449,7 @@ function AppInner() {
               </svg>
               {t.helpBtn}
             </button>
+            </div>
           </div>
         </header>
 
@@ -464,6 +469,7 @@ function AppInner() {
 
           {/* Center: Weekly planner */}
           <div className="flex-1 min-w-0 overflow-x-auto p-4" id="planner-area">
+            <div className="text-[10px] text-gray-500 mb-2 lg:hidden">Scroll horizontally to view all days</div>
             <div
               className="flex gap-4 h-full"
               style={{ minWidth: `${plan.days.length * 360}px` }}

@@ -33,6 +33,23 @@ body {
   background: #4b5563;
 }
 
+#planner-area::-webkit-scrollbar {
+  height: 10px;
+}
+
+#planner-area::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+#planner-area::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 999px;
+}
+
+#planner-area::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
 select {
   background: #0f172a;
   color: #e5e7eb;
