@@ -97,10 +97,26 @@ export function useWorkoutPlan() {
   }, []);
 
   const setDefaultRestSeconds = useCallback((restSeconds: number) => {
-    setPlan((prev) => ({
-      ...prev,
-      defaultRestSeconds: Math.max(15, Math.min(600, restSeconds)),
-    }));
+    setPlan((prev) => {
+      const nextRestSeconds = Math.max(15, Math.min(600, restSeconds));
+      return {
+        ...prev,
+        defaultRestSeconds: nextRestSeconds,
+        days: prev.days.map((day) => ({
+          ...day,
+          exercises: day.exercises.map((exercise) => {
+            if (
+              exercise.blockType === 'strength' ||
+              exercise.blockType === 'plyometric' ||
+              exercise.blockType === 'warmupSets'
+            ) {
+              return { ...exercise, restSeconds: nextRestSeconds };
+            }
+            return exercise;
+          }),
+        })),
+      };
+    });
   }, []);
 
   const updatePeriodization = useCallback((updates: Partial<WorkoutPlan['periodization']>) => {
